@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will You Love Me Forever? ❤️</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Card Container */
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 30px 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            z-index: 10;
+        }
+
+        .card h1 {
+            font-family: 'Dancing Script', cursive;
+            color: #d63384;
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: #555;
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+        }
+
+        /* Drag-and-drop workspace */
+        .game-area {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: 20px;
+            min-height: 120px;
+            position: relative;
+        }
+
+        /* The draggable heart */
+        .draggable-heart {
+            font-size: 3.5rem;
+            cursor: grab;
+            user-select: none;
+            touch-action: none; /* Prevents default mobile scrolling issues while dragging */
+            transition: transform 0.1s ease;
+            z-index: 20;
+            display: inline-block;
+            margin: 10px 0;
+        }
+
+        .draggable-heart:active {
+            cursor: grabbing;
+        }
+
+        /* Drop Zones Containers */
+        .drop-zones {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        /* YES Container (Large, easy to fit) */
+        #yes-zone {
+            width: 130px;
+            height: 90px;
+            background: #e8f5e9;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+
+        #yes-zone.highlight {
+            background: #c8e6c9;
+            transform: scale(1.05);
+        }
+
+        /* NO Container (Intentionally tiny, smaller than the heart) */
+        #no-zone {
+            width: 50px;
+            height: 40px;
+            background: #ffebee;
+            border-color: #ef5350;
+            color: #c62828;
+            font-size: 0.75rem;
+        }
+
+        /* Success screen overlay */
+        .success-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .success-screen h2 {
+            font-family: 'Dancing Script', cursive;
+            color: #d63384;
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+        }
+
+        .success-screen p {
+            color: #444;
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+
+        .hint {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 15px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="main-card">
+        <h1>My Dearest...</h1>
+        <p>Will you love me forever? Drag the heart into your answer! 👇</p>
+        
+        <!-- Draggable Heart Element -->
+        <div id="heart" class="draggable-heart" draggable="true">❤️</div>
+
+        <div class="drop-zones">
+            <!-- YES Container -->
+            <div id="yes-zone" class="drop-zone" ondragover="allowDrop(event)" ondragleave="removeHighlight(event)" ondrop="dropYes(event)">
+                <span>Yes 💖</span>
+            </div>
+
+            <!-- NO Container (Too small!) -->
+            <div id="no-zone" class="drop-zone" ondragover="allowDrop(event)" ondrop="dropNo(event)">
+                <span>No 😢</span>
+            </div>
+        </div>
+
+        <div class="hint" id="hint-text">Hint: Drag the heart into the correct box!</div>
+    </div>
+
+    <!-- Success Container -->
+    <div class="card" id="success-card" style="display: none;">
+        <div class="success-screen" style="display: block;">
+            <h2>Yay! Forever & Always! 🎉</h2>
+            <p>I knew you'd choose right! You are locked in with my heart for eternity. 🥰✨</p>
+        </div>
+    </div>
+
+    <script>
+        const heart = document.getElementById('heart');
+        const hintText = document.getElementById('hint-text');
+        const yesZone = document.getElementById('yes-zone');
+
+        // --- Desktop Drag and Drop Logic ---
+        heart.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', 'heart');
+        });
+
+        function allowDrop(e) {
+            e.preventDefault();
+            if(e.currentTarget.id === 'yes-zone') {
+                yesZone.classList.add('highlight');
+            }
+        }
+
+        function removeHighlight(e) {
+            if(e.currentTarget.id === 'yes-zone') {
+                yesZone.classList.remove('highlight');
+            }
+        }
+
+        function dropNo(e) {
+            e.preventDefault();
+            hintText.style.color = '#d32f2f';
+            hintText.innerHTML = "❌ Haha, the 'No' box is way too small for this big heart! Try the other one! 😉";
+        }
+
+        function dropYes(e) {
+            e.preventDefault();
+            triggerSuccess();
+        }
+
+        function triggerSuccess() {
+            document.getElementById('main-card').style.display = 'none';
+            document.getElementById('success-card').style.display = 'block';
+        }
+
+        // --- Mobile Touch Drag Logic (Fixed Bug) ---
+        let isDragging = false;
+        let touchOffsetX = 0;
+        let touchOffsetY = 0;
+        let hasMoved = false;
+
+        heart.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            hasMoved = false;
+            const touch = e.touches[0];
+            const rect = heart.getBoundingClientRect();
+            
+            touchOffsetX = touch.clientX - rect.left;
+            touchOffsetY = touch.clientY - rect.top;
+            
+            heart.style.position = 'fixed';
+            heart.style.zIndex = '1000';
+            updateHeartPosition(touch.clientX, touch.clientY);
+        });
+
+        heart.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            hasMoved = true; // Mark that user is actually dragging, not just tapping
+            const touch = e.touches[0];
+            updateHeartPosition(touch.clientX, touch.clientY);
+
+            // Check if hovering near the yes zone
+            const yesRect = yesZone.getBoundingClientRect();
+            const heartRect = heart.getBoundingClientRect();
+            
+            if (
+                heartRect.left < yesRect.right &&
+                heartRect.right > yesRect.left &&
+                heartRect.top < yesRect.bottom &&
+                heartRect.bottom > yesRect.top
+            ) {
+                yesZone.classList.add('highlight');
+            } else {
+                yesZone.classList.remove('highlight');
+            }
+        });
+
+        heart.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+
+            // If it was just a tap (no movement), do not trigger success!
+            if (!hasMoved) {
+                resetHeartPosition();
+                hintText.style.color = '#d32f2f';
+                hintText.innerHTML = "❌ Please drag the heart into the 'Yes' box! Don't just tap it! 😉";
+                return;
+            }
+
+            const yesRect = yesZone.getBoundingClientRect();
+            const heartRect = heart.getBoundingClientRect();
+            
+            // Check if dropped inside Yes zone
+            const droppedInYes = (
+                heartRect.left < yesRect.right &&
+                heartRect.right > yesRect.left &&
+                heartRect.top < yesRect.bottom &&
+                heartRect.bottom > yesRect.top
+            );
+
+            if (droppedInYes) {
+                triggerSuccess();
+            } else {
+                resetHeartPosition();
+                hintText.style.color = '#d32f2f';
+                hintText.innerHTML = "❌ Oops! Try dropping it into the 'Yes' box! 💖";
+            }
+        });
+
+        function updateHeartPosition(clientX, clientY) {
+            heart.style.left = (clientX - touchOffsetX) + 'px';
+            heart.style.top = (clientY - touchOffsetY) + 'px';
+        }
+
+        function resetHeartPosition() {
+            heart.style.position = 'static';
+            yesZone.classList.remove('highlight');
+        }
+    </script>
+</body>
+</html>
