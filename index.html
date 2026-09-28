@@ -217,31 +217,35 @@
             document.getElementById('success-card').style.display = 'block';
         }
 
-        // --- Mobile Touch Drag Logic (Fixed Bug) ---
+        // --- Mobile Touch Drag Logic (Fixed centering bug) ---
         let isDragging = false;
-        let touchOffsetX = 0;
-        let touchOffsetY = 0;
         let hasMoved = false;
 
         heart.addEventListener('touchstart', (e) => {
             isDragging = true;
             hasMoved = false;
-            const touch = e.touches[0];
+            
+            // Fix position layout before grabbing coordinates
             const rect = heart.getBoundingClientRect();
-            
-            touchOffsetX = touch.clientX - rect.left;
-            touchOffsetY = touch.clientY - rect.top;
-            
             heart.style.position = 'fixed';
+            heart.style.left = rect.left + 'px';
+            heart.style.top = rect.top + 'px';
             heart.style.zIndex = '1000';
-            updateHeartPosition(touch.clientX, touch.clientY);
-        });
+            
+            e.preventDefault(); // Stop page scrolling/zooming while grabbing element
+        }, { passive: false });
 
         heart.addEventListener('touchmove', (e) => {
             if (!isDragging) return;
-            hasMoved = true; // Mark that user is actually dragging, not just tapping
+            hasMoved = true;
             const touch = e.touches[0];
-            updateHeartPosition(touch.clientX, touch.clientY);
+            
+            // Center the heart exactly under the user's finger point
+            const heartWidth = heart.offsetWidth;
+            const heartHeight = heart.offsetHeight;
+            
+            heart.style.left = (touch.clientX - heartWidth / 2) + 'px';
+            heart.style.top = (touch.clientY - heartHeight / 2) + 'px';
 
             // Check if hovering near the yes zone
             const yesRect = yesZone.getBoundingClientRect();
@@ -257,13 +261,12 @@
             } else {
                 yesZone.classList.remove('highlight');
             }
-        });
+        }, { passive: false });
 
         heart.addEventListener('touchend', (e) => {
             if (!isDragging) return;
             isDragging = false;
 
-            // If it was just a tap (no movement), do not trigger success!
             if (!hasMoved) {
                 resetHeartPosition();
                 hintText.style.color = '#d32f2f';
@@ -274,7 +277,6 @@
             const yesRect = yesZone.getBoundingClientRect();
             const heartRect = heart.getBoundingClientRect();
             
-            // Check if dropped inside Yes zone
             const droppedInYes = (
                 heartRect.left < yesRect.right &&
                 heartRect.right > yesRect.left &&
@@ -290,11 +292,6 @@
                 hintText.innerHTML = "❌ Oops! Try dropping it into the 'Yes' box! 💖";
             }
         });
-
-        function updateHeartPosition(clientX, clientY) {
-            heart.style.left = (clientX - touchOffsetX) + 'px';
-            heart.style.top = (clientY - touchOffsetY) + 'px';
-        }
 
         function resetHeartPosition() {
             heart.style.position = 'static';
